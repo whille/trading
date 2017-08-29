@@ -22,9 +22,6 @@ def get_data(symbols, dates):
             df=df.dropna()#, how=how)
     return df
 
-def normalize(df):
-    return df/df.ix[0]
-
 def plot_selected(df, columns, start, end):
     """Plot the desired columns over index values in the given range."""
     plot_data(df.ix[start:end, columns])
@@ -55,6 +52,30 @@ def cumulative_returns(df):
     res.ix[0, :] = 0
     return res
 
+def normalize(df):
+    return df/df.ix[0]
+       
+def normalization(lst):
+    return [i - np.mean(lst) / np.std(lst) for i in lst]
+    
+def sharp_ratio(daily_ret, daily_rf=0, samples_per_year=252):
+    #average return earned in excess of the risk-free rate per unit 
+    # of volatility or total risk
+    sharpe_ratio = ((daily_ret - daily_rf).mean()/daily_ret.std()) * np.sqrt(samples_per_year)
+
+def momentum(prices, n=5):
+    return price[-1]/max(1e-6, price[-n]) - 1
+    
+def SMA(prices, n=5):    
+    """smooth moving average"""
+    average = sum(price[-n:])/n
+    return price[-1]/average - 1
+    
+def DMA(prices, vol, cap, n=5):
+    ratio = vol/cap # change ratio: VOL/CAPITAL
+    v = ratio * prices[-1] + (1-ratio) * DMA(prices[:-1], vol, cap, n=5)
+    return v
+    
 def plot_beta(df, x, symbol):
     df.plot(kind='scatter', x=x, y=symbol)
     beta, alpha = np.polyfit(df[x], df[symbol], 1)
