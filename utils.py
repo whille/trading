@@ -55,7 +55,7 @@ def cumulative_returns(df):
 def normalize(df):
     return df/df.ix[0]
        
-def normalization(lst):
+def z_score(lst):
     return [i - np.mean(lst) / np.std(lst) for i in lst]
     
 def sharp_ratio(daily_ret, daily_rf=0, samples_per_year=252):
@@ -63,13 +63,14 @@ def sharp_ratio(daily_ret, daily_rf=0, samples_per_year=252):
     # of volatility or total risk
     sharpe_ratio = ((daily_ret - daily_rf).mean()/daily_ret.std()) * np.sqrt(samples_per_year)
 
-def momentum(prices, n=5):
-    return price[-1]/max(1e-6, price[-n]) - 1
+def momentum(prices):
+    return prices[-1]/max(1e-6, prices[0]) - 1
     
-def SMA(prices, n=5):    
+def SMA(df, n=5):    
     """smooth moving average"""
-    average = sum(price[-n:])/n
-    return price[-1]/average - 1
+    return df.rolling(n).mean()
+    #average = sum(prices)/n
+    #return df[-1]/average - 1
     
 def DMA(prices, vol, cap, n=5):
     ratio = vol/cap # change ratio: VOL/CAPITAL
@@ -82,11 +83,14 @@ def plot_beta(df, x, symbol):
     print beta, alpha
     plt.plot(df[x], beta * df[x] + alpha , '-', color='r')
 
+def get_BB(df):
+    roll = df.rolling(window=20, center=False)
+    mean, std = roll.mean(), roll.std()
+    return get_bollinger_bands(mean, std)
+    
 def plot_rolling(df, symbol):
     # Plot raw values, rolling mean and Bollinger Bands
-    roll = df[symbol].rolling(window=20,center=False)
-    mean, std = roll.mean(), roll.std()
-    upper_band, lower_band = get_bollinger_bands(mean, std)
+    upper_band, lower_band = get_BB(df[symbol])
     ax = df[symbol].plot(title="Bollinger Bands", label=symbol)
     mean.plot(label='Rolling mean', ax=ax)
     upper_band.plot(label='upper band', ax=ax)
